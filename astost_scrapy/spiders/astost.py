@@ -8,29 +8,33 @@ from scrapy.http.request import Request
 
 from astost_scrapy.items import AstostScrapyItem
 
+from ..conf import config
+
 
 class AstostSpider(CrawlSpider):
     name = 'astost'
     allowed_domains = ['astost.com']
-    start_urls = ['https://www.astost.com/bbs/']
+    start_urls = ['https://www.astost.com/bbs']
 
     rules = (
-        Rule(LinkExtractor(allow=r'thread.php\?fid=(53|52|50|4|5|42|8|49)(&page=\d+)?$'), follow=True,
-             process_request='process_request'),
+        Rule(LinkExtractor(allow=r'thread.php\?fid=(53|52|50|4|5|42|8|49)(&page=%s)?$' % config.ASTOST_PAGES),
+             follow=True, process_request='process_request'),
         Rule(LinkExtractor(allow=r'read.php\?tid=\d+(&fpage=\d+)?$'), callback='parse_item',
              process_request='process_request'),
     )
 
     def __init__(self, *a, **kw):
-        self.__headers = {'Connection': 'keep-alive',
-                          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                          'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.6,ja;q=0.4,en;q=0.2',
-                          'Accept-Encoding': 'gzip, deflate, sdch, br',
-                          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) '
-                                        'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
-                          }
+        self.__headers = {
+            'Connection': 'keep-alive',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,zh-TW;q=0.8,ja;q=0.7,en;q=0.6',
+            # 'Accept-Encoding': 'gzip, deflate, br',
+            'User-Agent': config.ASTOST_USER_AGENT
+        }
 
-        self.__cookies = {'0cc61_winduser': 'xxxxxxxxxx'}
+        self.__cookies = {
+            '0cc61_winduser': config.ASTOST_COOKIES,
+        }
         self.__pattern_tid = re.compile(r'.*tid=(\d+)')
         self.__pattern_url = re.compile(r'&?fpage=\d+&?')
         self.__pattern_time = re.compile(r'\d{,4}-[01]\d-[0123]\d\s{1,2}[012]\d:[0-6]\d')
